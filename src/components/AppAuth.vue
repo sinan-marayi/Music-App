@@ -37,33 +37,37 @@
           </ul>
 
           <!-- Login Form -->
-          <vee-form v-show="tab === 'login'">
+          <app-alert v-if="login_show_alert" :message="alertMsg" :bgColor="bgColor"></app-alert>
+          <vee-form v-show="tab === 'login'" :validation-schema="schemas.login_schema" @submit="login">
             <!-- Email -->
             <div class="mb-3">
               <label class="inline-block mb-2">Email</label>
-              <input type="email"
+              <vee-field name="login_email" type="email"
                 class="block w-full py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
                 placeholder="Enter Email" />
+              <vee-error name="login_email" class="text-red-600"></vee-error>
             </div>
             <!-- Password -->
             <div class="mb-3">
               <label class="inline-block mb-2">Password</label>
-              <input type="password"
+              <vee-field name="login_password" type="password"
                 class="block w-full py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
                 placeholder="Password" />
+              <vee-error name="login_password" class="text-red-600"></vee-error>
             </div>
-            <button type="submit"
+            <button type="submit" :disabled="login_in_submission"
               class="block w-full bg-purple-600 text-white py-1.5 px-3 rounded transition hover:bg-purple-700">
               Submit
             </button>
           </vee-form>
           <!-- Registration Form -->
           <app-alert v-if="reg_show_alert" :message="alertMsg" :bgColor="bgColor"></app-alert>
-          <vee-form v-show="tab === 'register'" :validation-schema="schema" @submit="register" :initial-values="defaultValues">
+          <vee-form v-show="tab === 'register'" :validation-schema="schemas.register_schema" @submit="register"
+            :initial-values="defaultValues">
             <!-- Name -->
             <div class="mb-3">
               <label class="inline-block mb-2">Name</label>
-              <vee-field type="text" name="name"
+              <vee-field type="text" name="name" v-model="name"
                 class="block w-full py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
                 placeholder="Enter Name" />
               <vee-error name="name" class="text-red-600"></vee-error>
@@ -122,8 +126,7 @@
               <label class="inline-block">Accept terms of service</label>
               <vee-error name="tos" class="text-red-600 block"></vee-error>
             </div>
-            <button type="submit"
-            :disabled="reg_in_submission"
+            <button type="submit" :disabled="reg_in_submission"
               class="block w-full bg-purple-600 text-white py-1.5 px-3 rounded transition hover:bg-purple-700 disabled:opacity-50">
               Submit
             </button>
@@ -136,8 +139,9 @@
 
 
 <script>
-import { mapStores, mapWritableState } from 'pinia';
+import { mapStores, mapWritableState, mapActions } from 'pinia';
 import useModalStore from '@/stores/modal';
+import useUserStore from '@/stores/user';
 import AppAlert from './AppAlert.vue';
 
 
@@ -150,43 +154,94 @@ export default {
     ...mapStores(useModalStore, {
       'hiddenClass': 'hiddenClass'
     }),
-    ...mapWritableState(useModalStore, ["isOpen"])
+    ...mapWritableState(useModalStore, ["isOpen"]),
+    ...mapWritableState(useUserStore, ["isLoggedIn"])
   },
   mounted() { },
   data() {
     return {
       tab: 'login',
-      schema: {
-        name: 'required|min:2|max:20|alpha_spaces',
-        email: 'required|email',
-        age: 'required|min_value:18|max_value:100',
-        password: 'required|min:8|max:20|excluded:password',
-        confirm_password: 'required|confirmed:@password',
-        country: 'required|excluded:Antarctica',
-        tos: 'tos'
-      },
-      defaultValues:{
-        country:'India'
+      defaultValues: {
+        country: 'India'
       },
       reg_in_submission: false,
+      login_in_submission: false,
       alertMsg: '',
       bgColor: 'bg-red-500',
-      reg_show_alert: false
+      reg_show_alert: false,
+      login_show_alert: false,
+      schemas: {
+        register_schema: {
+          name: 'required|min:2|max:20|alpha_spaces',
+          email: 'required|email',
+          age: 'required|min_value:18|max_value:100',
+          password: 'required|min:8|max:20|excluded:password',
+          confirm_password: 'required|confirmed:@password',
+          country: 'required|excluded:Antarctica',
+          tos: 'tos'
+        },
+        login_schema: {
+          login_email: 'required|email',
+          login_password: 'required|min:8|max:20'
+        }
+      },
+      name: ''
     }
   },
   methods: {
-    register(values) {
+    
+    ...mapActions(useUserStore, {
+      createUser: 'register',
+      authenticate: 'login'
+    }),
+
+    async register(values) {
       this.reg_show_alert = true;
       this.reg_in_submission = true;
       this.alertMsg = 'Registration in progress...';
       this.bgColor = 'bg-yellow-500';
 
-      setTimeout(() => {
-        this.alertMsg = 'Registration successful!';
-        this.bgColor = 'bg-green-500';
-      }, 2000);
+      try {
+        await this.createUser(values)
+      } catch (err) {
+        this.reg_in_submission = false
+        this.reg_show_alert = true
+        if (err.code === 'auth/email-already-in-use') {
+          this.alertMsg = err.message
+          this.bgColor = 'bg-red-500'
+          return
+        }
+        this.alertMsg = 'Unexpected error occured! Please try again.'
+        this.bgColor = 'bg-red-500'
+        console.log(err)
+        return
+      }
 
+      this.alertMsg = 'Registration successful!';
+      this.bgColor = 'bg-green-500';
+      window.location.reload()
+    },
+
+    async login(values) {
       console.log(values)
+      this.login_show_alert = true;
+      this.login_in_submission = true;
+      this.alertMsg = 'Login in progress...';
+      this.bgColor = 'bg-yellow-500';
+
+      try {
+        await this.authenticate(values)
+      } catch (error) {
+        this.login_in_submission = false
+        this.alertMsg = 'Invalid credentials!'
+        this.bgColor = 'bg-red-500'
+        console.log(error)
+        return
+      }
+
+      this.alertMsg = 'Login successful!';
+      this.bgColor = 'bg-green-500';
+      window.location.reload()
 
     }
   }
