@@ -3,17 +3,26 @@
     <header id="header" class="bg-gray-700">
         <nav class="container mx-auto flex justify-start items-center py-5 px-4">
             <!-- App Name -->
-            <a class="text-white font-bold uppercase text-2xl mr-4" href="#">Music</a>
+            <router-link class="text-white font-bold uppercase text-2xl mr-4" exact-active-class="no-active"
+                :to="{ name: 'home' }">Music</router-link>
 
             <div class="flex flex-grow items-center">
                 <!-- Primary Navigation -->
                 <ul class="flex flex-row mt-1">
                     <!-- Navigation Links -->
-                    <li>
-                        <a @click="toggleModal" class="px-2 text-white" href="#">Login / Register</a>
+                    <li v-if="!userStore.isLoggedIn">
+                        <a @click.prevent="toggleModal" class="px-2 text-white" href="#">Login / Register</a>
                     </li>
+                    <template v-else>
+                        <li>
+                            <router-link class="px-2 text-white" :to="{ name: 'manage' }">Manage</router-link>
+                        </li>
+                        <li>
+                            <a @click.prevent="logout" class="px-2 text-white" href="#">Logout</a>
+                        </li>
+                    </template>
                     <li>
-                        <a class="px-2 text-white" href="#">Manage</a>
+                        <router-link class="px-2 text-white" :to="{ name: 'about' }">About</router-link>
                     </li>
                 </ul>
             </div>
@@ -25,16 +34,24 @@
 <script>
 import { mapStores } from 'pinia';
 import useModalStore from '@/stores/modal';
+import useUserStore from '@/stores/user';
 
 
 export default {
     name: 'AppHeader',
     computed: {
-        ...mapStores(useModalStore)
+        ...mapStores(useModalStore, useUserStore)
     },
-    methods:{
-        toggleModal(){
+    methods: {
+        toggleModal() {
             this.modalStore.isOpen = !this.modalStore.isOpen;
+        },
+        logout(){
+            this.userStore.logout();
+
+            if(this.$route.meta.isAuthRequired){
+                this.$router.push({ name: 'home' });
+            }
         }
     }
 }
