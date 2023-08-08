@@ -24,6 +24,11 @@ const routes = [
     redirect: { name: 'manage' }
   },  
   {
+    path:'/song/:id',
+    name:'song',
+    component: () => import('../views/SongView.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: { name: 'home' }
   }

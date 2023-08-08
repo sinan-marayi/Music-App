@@ -33,6 +33,7 @@ export default {
     defineRule('max_value', maxVal)
     defineRule('confirmed', confirmed)
     defineRule('excluded', excluded)
+    defineRule('songTitleValidation', required)
 
     configure({
         generateMessage: ctx => {
@@ -46,7 +47,8 @@ export default {
                 max_value:`The field ${ctx.field} is too high`,
                 confirmed:`The field ${ctx.field} confirmation does not match`,
                 excluded:`You are not allowed to use this value for the field ${ctx.field}`,
-                tos:`You must accept the Terms of Service`
+                tos:`You must accept the Terms of Service`,
+                songTitleValidation:`The field song title should not be empty`
             }
 
             const message=messages[ctx.rule.name] ? messages[ctx.rule.name] : `The field ${ctx.field} is invalid`
