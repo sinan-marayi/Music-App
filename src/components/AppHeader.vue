@@ -25,6 +25,14 @@
                         <router-link class="px-2 text-white" :to="{ name: 'about' }">About</router-link>
                     </li>
                 </ul>
+                <select
+                    class="ml-auto focus:ring-0 bg-gray-700 text-white focus:border-0 selection:ring-0 selection:border-0"
+                    name="locale" id="locale" v-model="locale">
+                    <option value="en">English</option>
+                    <option value="ar">Arabic</option>
+                    <option value="hi">Hindi</option>
+                    <option value="ml">Malayalam</option>
+                </select>
             </div>
         </nav>
     </header>
@@ -42,16 +50,29 @@ export default {
     computed: {
         ...mapStores(useModalStore, useUserStore)
     },
+    mounted() {
+        this.locale = this.$i18n.locale;
+    },
+    data() {
+        return {
+            locale: ''
+        }
+    },
     methods: {
         toggleModal() {
             this.modalStore.isOpen = !this.modalStore.isOpen;
         },
-        logout(){
+        logout() {
             this.userStore.logout();
 
-            if(this.$route.meta.isAuthRequired){
+            if (this.$route.meta.isAuthRequired) {
                 this.$router.push({ name: 'home' });
             }
+        }
+    },
+    watch: {
+        locale(newVal) {
+            this.$i18n.locale = newVal;
         }
     }
 }
