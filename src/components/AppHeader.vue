@@ -1,17 +1,17 @@
 <template >
     <!-- Header -->
     <header id="header" class="bg-gray-700">
-        <nav class="container mx-auto flex justify-start items-center py-5 px-4">
+        <nav class="container mx-auto flex flex-col sm:flex-row justify-start sm:items-center py-5 px-4">
             <!-- App Name -->
             <router-link class="text-white font-bold uppercase text-2xl mr-4" exact-active-class="no-active"
                 :to="{ name: 'home' }">Music</router-link>
 
-            <div class="flex flex-grow items-center">
+            <div class="flex flex-grow items-center text-sm sm:text-base">
                 <!-- Primary Navigation -->
                 <ul class="flex flex-row mt-1">
                     <!-- Navigation Links -->
                     <li v-if="!userStore.isLoggedIn">
-                        <a @click.prevent="toggleModal" class="px-2 text-white" href="#">Login / Register</a>
+                        <a @click.prevent="toggleModal" class="sm:px-2 text-white" href="#">Login / Register</a>
                     </li>
                     <template v-else>
                         <li>
@@ -26,7 +26,7 @@
                     </li>
                 </ul>
                 <select
-                    class="ml-auto focus:ring-0 bg-gray-700 text-white focus:border-0 selection:ring-0 selection:border-0"
+                    class="ml-auto text-sm sm:text-base focus:ring-0 bg-gray-700 text-white focus:border-0 selection:ring-0 selection:border-0"
                     name="locale" id="locale" v-model="locale">
                     <option value="en">English</option>
                     <option value="ar">Arabic</option>
